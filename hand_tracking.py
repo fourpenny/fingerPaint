@@ -3,6 +3,9 @@
 
 #to do: implement fps using moving average rather than instantaneous fps
 
+#list of hand tracking landmarks in mediapipe is available here:
+#https://google.github.io/mediapipe/images/mobile/hand_landmarks.png
+
 import cv2 as cv 
 import mediapipe as mp 
 import time
@@ -29,7 +32,7 @@ class handDetector():
                     self.mpDraw.draw_landmarks(img, handLms, self.mpHands.HAND_CONNECTIONS)
         return img
 
-    def findPosition(self, img, handNo=0, draw=True):
+    def findPosition(self, img, handNo=0, draw=False):
         lmList = []
 
         if self.results.multi_hand_landmarks:
@@ -44,9 +47,14 @@ class handDetector():
                         cv.circle(img, (cx,cy), 10, (255,0,255), cv.FILLED)
         return lmList
 
+def framesPerSecond(past):
+    current = time.time()
+    fps = 1/(current-past)
+    past = current
+    return past, fps
+
 def main():
     pTime = 0 
-    cTime = 0 
     cap = cv.VideoCapture(0)
     detector = handDetector()
 
@@ -56,11 +64,9 @@ def main():
 
         lmList = detector.findPosition(img)
         if len(lmList) != 0 :
-            print(lmList[8])
-
-        cTime = time.time()
-        fps = 1/(cTime-pTime)
-        pTime = cTime        
+            print(lmList)
+            
+        pTime, fps = framesPerSecond(pTime)       
 
         cv.putText(img, str(int(fps)), (10,70), cv.FONT_HERSHEY_PLAIN, 
                 3, (255,0,255), 3)
